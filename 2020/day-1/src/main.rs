@@ -13,14 +13,10 @@ fn get_numbers() -> Result<Vec<u32>, std::io::Error> {
 
     let f = File::open("input.txt")?;
     let mut reader = BufReader::new(f);
-    loop {
-        let mut line = String::new();
-        let len = reader.read_line(&mut line)?;
-        if len == 0
-        {
-            break;
-        }
+    let mut line = String::new();
+    while reader.read_line(&mut line)? > 0 {
         numbers.push(line.trim_end().parse::<u32>().unwrap());
+        line.clear();
     }
     Ok(numbers)
 }
