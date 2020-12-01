@@ -26,10 +26,10 @@ fn main() -> std::io::Result<()> {
     let numbers = get_numbers()?;
 
     for num in 2..4 {
-        for combination in numbers.iter().combinations(num) {
-            let sum: u32 = combination.iter().copied().sum();
+        for combination in numbers.iter().copied().combinations(num) {
+            let sum: u32 = combination.iter().sum();
             if sum == 2020 {
-                let product: u32 = combination.iter().copied().product();
+                let product: u32 = combination.iter().product();
                 println!("{}", product);
                 break;
             }
