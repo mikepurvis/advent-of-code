@@ -31,13 +31,9 @@ fn main() -> std::io::Result<()> {
 
     for num in 2..4 {
         for combination in numbers.iter().combinations(num) {
-
-            //let sum: u32 = combination.iter().sum();
-            //let sum: u32 = combination.clone().into_iter().sum();
-            let sum = combination.iter().fold(0, |sum, &val| sum + val);
-
+            let sum: u32 = combination.iter().copied().sum();
             if sum == 2020 {
-                let product = combination.iter().fold(1, |prod, &val| prod * val);
+                let product: u32 = combination.iter().copied().product();
                 println!("{}", product);
                 break;
             }
