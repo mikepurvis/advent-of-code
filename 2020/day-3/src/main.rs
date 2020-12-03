@@ -1,4 +1,5 @@
 use std::fs;
+use std::ops;
 use std::vec::Vec;
 
 
@@ -11,20 +12,46 @@ fn map_from_file(filename: &str) -> Result<Vec<Vec<char>>, std::io::Error> {
     Ok(map)
 }
 
+#[derive(Debug)]
+struct Point {
+    x: usize,
+    y: usize
+}
+
+impl ops::AddAssign<&Point> for Point {
+    fn add_assign(&mut self, other: &Self) {
+        self.x += other.x;
+        self.y += other.y;
+    }
+}
 
 fn main() -> std::io::Result<()> {
+    let slopes = vec![
+        Point { x: 1, y: 1 },
+        Point { x: 3, y: 1 },
+        Point { x: 5, y: 1 },
+        Point { x: 7, y: 1 },
+        Point { x: 1, y: 2 },
+    ];
     let map = map_from_file("input.txt").unwrap();
-    let mut colnum = 0;
-    let mut collisions = 0;
-    for row in map.iter() {
-        if row[colnum] != '.' {
-            collisions += 1;
+    let mut result: u64 = 1;
+
+    for slope in slopes.iter()
+    {
+        let mut pos = Point { x: 0, y: 0 };
+        let mut collisions = 0;
+        while pos.y < map.len() {
+            if map[pos.y][pos.x] != '.' {
+                collisions += 1;
+            }
+            pos += &slope;
+            if pos.x >= map[0].len() {
+                pos.x -= map[0].len()
+            }
         }
-        colnum += 3;
-        if colnum >= row.len() {
-            colnum -= row.len()
-        }
+        println!("Collisions for {:?}: {}", slope, collisions);
+        result *= collisions;
     }
-    println!("Collisions: {}", collisions);
+    println!("Result: {}", result);
     Ok(())
 }
