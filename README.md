@@ -7,3 +7,4 @@ to learn idiomatic Rust, but also to understand specific language and ecosystem 
 - Day 1: Cargo, file IO, vectors, iteration, references, Result/Ok.
 - Day 2: Regex, structs, derive macros, traits, templates.
 - Day 3: Operator overloading.
+- Day 4: Type aliases, hashmaps, lazy_static, Option/match.
