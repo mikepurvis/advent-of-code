@@ -13,14 +13,14 @@ lazy_static! {
     static ref RE_HGT: Regex = Regex::new("([0-9]+)(cm|in)$").unwrap();
     static ref RE_HCL: Regex = Regex::new("#[0-9a-f]{6}$").unwrap();
     static ref RE_ECL: Regex = Regex::new("(amb|blu|brn|gry|grn|hzl|oth)$").unwrap();
-    static ref RE_PID: Regex = Regex::new("#[0-9]{9}$").unwrap();
+    static ref RE_PID: Regex = Regex::new("[0-9]{9}$").unwrap();
 }
 
 struct Passport {
     fields: HashMap<String, String>
 }
 impl Passport {
-    fn from_lines(mut lines: &mut std::str::Lines<'_>) -> Option<Self> {
+    fn from_lines(mut lines: &mut std::str::Lines) -> Option<Self> {
         let mut passport = Self { fields: HashMap::new() };
         for line in &mut lines {
             if line.trim().is_empty() {
@@ -48,8 +48,38 @@ impl Passport {
         return true;
     }
 
+    fn check_year(yr: &String, min: u32, max: u32) -> bool {
+        if !RE_YR.is_match(&yr) {
+            return false;
+        }
+        let value = yr.parse::<u32>().unwrap();
+        if value < min || value > max {
+            return false;
+        }
+        return true;
+    }
+
     fn check_data(&self) -> bool {
-        true
+        if !Passport::check_year(&self.fields["byr"], 1920, 2002) { return false; }
+        if !Passport::check_year(&self.fields["iyr"], 2010, 2020) { return false; }
+        if !Passport::check_year(&self.fields["eyr"], 2020, 2030) { return false; }
+
+        match RE_HGT.captures(&self.fields["hgt"]) {
+            Some(cap) => {
+                let value = cap[1].parse::<i32>().unwrap();
+                match &cap[2] {
+                    "cm" => if value < 150 || value > 193 { return false; },
+                    "in" => if value < 59 || value > 76 { return false; },
+                    _ => return false
+                }
+            },
+            None => return false
+        }
+
+        if !RE_HCL.is_match(&self.fields["hcl"]) { return false; }
+        if !RE_ECL.is_match(&self.fields["ecl"]) { return false; }
+        if !RE_PID.is_match(&self.fields["pid"]) { return false; }
+        return true;
     }
 }
 
@@ -76,6 +106,7 @@ fn main() {
             valid_fields += 1;
             if passport.check_data() {
                 valid_data += 1;
+                println!("{} {} {}", passport.fields["byr"], passport.fields["iyr"], passport.fields["eyr"]);
             }
         }
     }
