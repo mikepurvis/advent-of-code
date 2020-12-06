@@ -43,7 +43,16 @@ fn seats_from_file(filename: &str) -> Result<Vec<Seat>, std::io::Error> {
 
 fn main() {
     let seats = seats_from_file("input.txt").unwrap();
-    println!("Highest ID: {}", &seats.iter().map(|s| s.get_id()).max().unwrap());
+    let mut ids: Vec<u16> = seats.iter().map(|s| s.get_id()).collect();
+    println!("Highest ID: {}", &ids.iter().max().unwrap());
+
+    ids.sort();
+    for s in ids.windows(2) {
+        if s[1] - s[0] != 1 {
+            println!("Our seat: {}", s[0] + 1);
+            break;
+        }
+    }
 }
 
 #[test]
