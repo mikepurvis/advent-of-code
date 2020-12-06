@@ -9,11 +9,11 @@ use std::vec::Vec;
 
 lazy_static! {
     static ref RE_FIELDS: Regex = Regex::new("([a-z]+):([^\\s]+)").unwrap();
-    static ref RE_YR: Regex = Regex::new("([0-9]{4})$").unwrap();
-    static ref RE_HGT: Regex = Regex::new("([0-9]+)(cm|in)$").unwrap();
-    static ref RE_HCL: Regex = Regex::new("#[0-9a-f]{6}$").unwrap();
-    static ref RE_ECL: Regex = Regex::new("(amb|blu|brn|gry|grn|hzl|oth)$").unwrap();
-    static ref RE_PID: Regex = Regex::new("[0-9]{9}$").unwrap();
+    static ref RE_YR: Regex = Regex::new("^([0-9]{4})$").unwrap();
+    static ref RE_HGT: Regex = Regex::new("^([0-9]+)(cm|in)$").unwrap();
+    static ref RE_HCL: Regex = Regex::new("^#[0-9a-f]{6}$").unwrap();
+    static ref RE_ECL: Regex = Regex::new("^(amb|blu|brn|gry|grn|hzl|oth)$").unwrap();
+    static ref RE_PID: Regex = Regex::new("^[0-9]{9}$").unwrap();
 }
 
 struct Passport {
@@ -106,7 +106,6 @@ fn main() {
             valid_fields += 1;
             if passport.check_data() {
                 valid_data += 1;
-                println!("{} {} {}", passport.fields["byr"], passport.fields["iyr"], passport.fields["eyr"]);
             }
         }
     }
