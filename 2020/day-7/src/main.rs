@@ -29,7 +29,7 @@ fn bag_rule_map_from_contents(contents: &str) -> BagRuleMap {
     }
 
     let mut bag_rule_map: BagRuleMap = HashMap::new();
-	let file = BagsParser::parse(Rule::file, &contents).unwrap().next().unwrap();
+    let file = BagsParser::parse(Rule::file, &contents).unwrap().next().unwrap();
     for statement in file.into_inner() {
         if statement.as_rule() == Rule::statement {
             let mut inner = statement.into_inner();
@@ -65,26 +65,22 @@ fn invert_rule_map(rule_map: &BagRuleMap) -> HashMap<String, HashSet<String>> {
 
 fn inverse_find(inverse_map: &HashMap<String, HashSet<String>>, needle: String) -> HashSet<String> {
     let mut set = HashSet::new();
-    match inverse_map.get(&needle) {
-        Some(found) => for bag in found.iter() {
+    if let Some(found) = inverse_map.get(&needle) {
+        for bag in found.iter() {
             set.insert(bag.to_string());
             set.extend(inverse_find(inverse_map, bag.to_string()));
-        },
-        None => ()
+        }
     }
     return set;
 }
 
 fn forward_count(map: &BagRuleMap, name: &String, count: usize) -> usize {
     let mut sum = 0;
-    match map.get(name) {
-        Some(contents) => {
-            for (quantity, contents_name) in contents.iter() {
-                sum += count * quantity;
-                sum += forward_count(&map, &contents_name, count * quantity);
-            }
-        },
-        None => ()
+    if let Some(contents) = map.get(name) {
+        for (quantity, contents_name) in contents.iter() {
+            sum += count * quantity;
+            sum += forward_count(&map, &contents_name, count * quantity);
+        }
     }
     return sum;
 }
