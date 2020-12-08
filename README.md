@@ -11,3 +11,4 @@ to learn idiomatic Rust, but also to understand specific language and ecosystem 
 - Day 5: Tests, PartialEq, map, enumerate, as-conversions.
 - Day 6: HashSet, heredoc syntax, type aliases, flatten and fold.
 - Day 7: Parsing using pest, if-let.
+- Day 8: Enums, BitVec
