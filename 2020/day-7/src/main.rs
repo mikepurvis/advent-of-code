@@ -53,7 +53,7 @@ fn invert_rule_map(rule_map: &BagRuleMap) -> HashMap<String, HashSet<String>> {
     let mut map: HashMap<String, HashSet<String>> = HashMap::new();
 
     for (bag, contents) in rule_map.iter() {
-        for (_q, contents_bag) in contents.iter() {
+        for (_quantity, contents_bag) in contents.iter() {
             if !map.contains_key(&contents_bag.to_string()) {
                 map.insert(contents_bag.to_string(), HashSet::new());
             }
@@ -75,12 +75,27 @@ fn inverse_find(inverse_map: &HashMap<String, HashSet<String>>, needle: String) 
     return set;
 }
 
+fn forward_count(map: &BagRuleMap, name: &String, count: usize) -> usize {
+    let mut sum = 0;
+    match map.get(name) {
+        Some(contents) => {
+            for (quantity, contents_name) in contents.iter() {
+                sum += count * quantity;
+                sum += forward_count(&map, &contents_name, count * quantity);
+            }
+        },
+        None => ()
+    }
+    return sum;
+}
+
 fn main() {
 	let contents = fs::read_to_string("input.txt").unwrap();
     let rule_map = bag_rule_map_from_contents(&contents);
     let inverse = invert_rule_map(&rule_map);
     let found = inverse_find(&inverse, "shiny gold".to_string());
     println!("Found bags: {}", found.len());
+    println!("Inner count: {}", forward_count(&rule_map, &"shiny gold".to_string(), 1));
 }
 
 
@@ -100,4 +115,19 @@ dotted black bags contain no other bags.
     let inverse = invert_rule_map(&rule_map);
     let found = inverse_find(&inverse, "shiny gold".to_string());
     assert_eq!(4, found.len());
+    assert_eq!(32, forward_count(&rule_map, &"shiny gold".to_string(), 1));
+}
+
+#[test]
+fn test_sample2() {
+    const SAMPLE_INPUT: &str = r#"shiny gold bags contain 2 dark red bags.
+dark red bags contain 2 dark orange bags.
+dark orange bags contain 2 dark yellow bags.
+dark yellow bags contain 2 dark green bags.
+dark green bags contain 2 dark blue bags.
+dark blue bags contain 2 dark violet bags.
+dark violet bags contain no other bags.
+"#;
+    let rule_map = bag_rule_map_from_contents(&SAMPLE_INPUT);
+    assert_eq!(126, forward_count(&rule_map, &"shiny gold".to_string(), 1));
 }
