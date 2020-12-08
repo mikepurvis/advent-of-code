@@ -1,0 +1,17 @@
+WHITESPACE = _{ " " }
+
+word = @{ ASCII_ALPHA_LOWER+ }
+
+bagx = _{ "bags" | "bag" }
+
+bag_type = { word ~ word ~ bagx }
+
+number = @{ ASCII_NONZERO_DIGIT ~ ASCII_DIGIT* }
+
+contents = { number ~ bag_type ~ ("," ~ number ~ bag_type)* }
+
+no_contents = { "no other bags" }
+
+statement = { bag_type ~ "contain" ~ (no_contents | contents) ~ "." }
+
+file = { SOI ~ (statement ~ NEWLINE)* ~ EOI }
