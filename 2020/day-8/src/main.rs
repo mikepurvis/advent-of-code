@@ -1,16 +1,17 @@
 extern crate bit_vec;
 
 use bit_vec::BitVec;
-use itertools::Itertools;
 use std::vec::Vec;
 use std::fs;
 
+#[derive(Debug, PartialEq)]
+enum Exit { Repeat, OutOfBounds }
 
-#[derive(Debug)]
-enum Op {
-    Nop,
-    Acc { arg: isize },
-    Jmp { arg: isize }
+enum OpCode { Nop, Acc, Jmp }
+
+struct Op {
+    code: OpCode,
+    arg: isize
 }
 
 type Program = Vec<Op>;
@@ -19,12 +20,15 @@ fn program_from_contents(contents: &str) -> Program
 {
     let mut program = Vec::new();
     for line in contents.lines() {
-        program.push(match line.split_whitespace().next_tuple().unwrap() {
-            ("nop", _) => Op::Nop,
-            ("acc", arg) => Op::Acc { arg: arg.parse().unwrap() },
-            ("jmp", arg) => Op::Jmp { arg: arg.parse().unwrap() },
+        let tokens = line.split_whitespace().collect::<Vec<&str>>();
+        let code = match tokens[0] {
+            "nop" => OpCode::Nop,
+            "acc" => OpCode::Acc,
+            "jmp" => OpCode::Jmp,
             _ => unreachable!()
-        });
+        };
+        let arg = tokens[1].parse::<isize>().unwrap();
+        program.push(Op { code: code, arg: arg })
     }
     return program;
 }
@@ -38,15 +42,26 @@ impl Machine {
     fn new() -> Self {
         Self { pc: 0, acc: 0 }
     }
-    fn run_until_repeat(&mut self, program: &Program) {
+    fn run(&mut self, program: &Program) -> Exit {
         let mut log = BitVec::from_elem(program.len(), false);
-        while !log[self.pc] {
+
+        loop {
+            if self.pc >= program.len() {
+                return Exit::OutOfBounds
+            } else if log[self.pc] {
+                return Exit::Repeat
+            }
+
             log.set(self.pc, true);
-            match program[self.pc] {
-                Op::Nop => self.pc += 1,
-                Op::Acc { arg } => { self.acc += arg; self.pc += 1 },
-                Op::Jmp { arg } if arg < 0 => self.pc -= -arg as usize,
-                Op::Jmp { arg } => self.pc += arg as usize
+            let op = &program[self.pc];
+            match op.code {
+                OpCode::Nop => self.pc += 1,
+                OpCode::Acc => { self.acc += op.arg; self.pc += 1 },
+                OpCode::Jmp => if op.arg < 0 {
+                    self.pc -= -op.arg as usize
+                } else {
+                    self.pc += op.arg as usize
+                }
             }
         }
     }
@@ -56,7 +71,7 @@ fn main() {
     let contents = fs::read_to_string("input.txt").unwrap();
     let program = program_from_contents(&contents);
     let mut machine = Machine::new();
-    machine.run_until_repeat(&program);
+    machine.run(&program);
     println!("Accumulator: {}", machine.acc);
 }
 
@@ -74,6 +89,7 @@ acc +6
 "#;
     let program = program_from_contents(SAMPLE_INPUT);
     let mut machine = Machine::new();
-    machine.run_until_repeat(&program);
+    let exit_code = machine.run(&program);
+    assert_eq!(exit_code, Exit::Repeat);
     assert_eq!(machine.acc, 5);
 }
