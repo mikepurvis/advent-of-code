@@ -85,13 +85,17 @@ impl Machine {
 
             log.set(self.pc, true);
             let op = &program[self.pc];
+            self.pc += 1;
             match op.code {
-                OpCode::Nop => self.pc += 1,
-                OpCode::Acc => { self.acc += op.arg; self.pc += 1 },
-                OpCode::Jmp => if op.arg < 0 {
-                    self.pc -= -op.arg as usize
-                } else {
-                    self.pc += op.arg as usize
+                OpCode::Nop => (),
+                OpCode::Acc => self.acc += op.arg,
+                OpCode::Jmp => {
+                    self.pc -= 1;
+                    if op.arg < 0 {
+                        self.pc -= -op.arg as usize
+                    } else {
+                        self.pc += op.arg as usize
+                    }
                 }
             }
         }
