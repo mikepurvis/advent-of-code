@@ -7,8 +7,10 @@ use std::fs;
 #[derive(Debug, PartialEq)]
 enum Exit { Repeat, OutOfBounds }
 
+#[derive(Debug, Clone)]
 enum OpCode { Nop, Acc, Jmp }
 
+#[derive(Debug, Clone)]
 struct Op {
     code: OpCode,
     arg: isize
@@ -16,8 +18,7 @@ struct Op {
 
 type Program = Vec<Op>;
 
-fn program_from_contents(contents: &str) -> Program
-{
+fn program_from_contents(contents: &str) -> Program {
     let mut program = Vec::new();
     for line in contents.lines() {
         let tokens = line.split_whitespace().collect::<Vec<&str>>();
@@ -31,6 +32,36 @@ fn program_from_contents(contents: &str) -> Program
         program.push(Op { code: code, arg: arg })
     }
     return program;
+}
+
+struct ProgramMutations<'a> {
+    program: &'a Program,
+    index: usize
+}
+
+impl<'a> ProgramMutations<'_> {
+    fn from_program(program: &'a Program) -> ProgramMutations {
+        ProgramMutations { program: program, index: 0 }
+    }
+}
+
+impl Iterator for ProgramMutations<'_> {
+    type Item = Program;
+
+    fn next(&mut self) -> Option<Program> {
+        while self.index < self.program.len() {
+            let new_code = match self.program[self.index].code {
+                OpCode::Acc => { self.index += 1; continue },
+                OpCode::Nop => OpCode::Jmp,
+                OpCode::Jmp => OpCode::Nop
+            };
+            let mut program = self.program.clone();
+            program[self.index].code = new_code;
+            self.index += 1;
+            return Some(program);
+        }
+        None
+    }
 }
 
 struct Machine {
@@ -73,6 +104,14 @@ fn main() {
     let mut machine = Machine::new();
     machine.run(&program);
     println!("Accumulator: {}", machine.acc);
+
+    for mutated_program in ProgramMutations::from_program(&program) {
+        let mut machine = Machine::new();
+        if machine.run(&mutated_program) == Exit::OutOfBounds {
+            println!("Accumulator: {}", machine.acc);
+            break;
+        }
+    }
 }
 
 #[test]
@@ -92,4 +131,14 @@ acc +6
     let exit_code = machine.run(&program);
     assert_eq!(exit_code, Exit::Repeat);
     assert_eq!(machine.acc, 5);
+
+    let mut found = false;
+    for mutated_program in ProgramMutations::from_program(&program) {
+        let mut machine = Machine::new();
+        if machine.run(&mutated_program) == Exit::OutOfBounds {
+            assert_eq!(machine.acc, 8);
+            found = true;
+        }
+    }
+    assert!(found, "Should have found an OutOfBounds mutation.");
 }
