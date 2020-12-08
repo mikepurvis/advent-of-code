@@ -29,7 +29,7 @@ fn program_from_contents(contents: &str) -> Program {
             _ => unreachable!()
         };
         let arg = tokens[1].parse::<isize>().unwrap();
-        program.push(Op { code: code, arg: arg })
+        program.push(Op { code, arg })
     }
     return program;
 }
