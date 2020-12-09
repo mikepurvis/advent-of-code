@@ -10,48 +10,49 @@ fn numbers_from_contents(contents: &str) -> Vec<u64> {
         .collect()
 }
 
-#[derive(Debug)]
-struct NumberFinder<I> where I: Iterator<Item = u64> {
-    iter: I,
-    preamble: VecDeque<u64>
-}
-
-impl<I: Iterator<Item = u64>> NumberFinder<I> {
-    fn start(preamble_len: usize, mut iter: I) -> NumberFinder<I> {
-        NumberFinder {
-            preamble: iter.by_ref().take(preamble_len).collect(),
-            iter: iter
-        }
-    }
-}
-
-impl<I: Iterator<Item = u64>> Iterator for NumberFinder<I> {
-    type Item = u64;
-
-    fn next(&mut self) -> Option<u64> {
-        fn rotate(preamble: &mut VecDeque<u64>, value: u64) {
+fn find_number<I>(preamble_len: usize, iter: &mut I) -> Option<u64>
+where I: Iterator<Item = u64> {
+    let mut preamble: VecDeque<u64> = iter.by_ref().take(preamble_len).collect();
+    for value in iter {
+        if preamble.iter().copied().combinations(2)
+            .any(|c| c.iter().copied().sum::<u64>() == value) {
             preamble.pop_front();
             preamble.push_back(value);
+            continue;
         }
+        preamble.pop_front();
+        preamble.push_back(value);
+        return Some(value);
+    }
+    None
+}
 
-        loop {
-            let value = self.iter.next()?;
-            if self.preamble.iter().copied().combinations(2)
-                .any(|c| c.iter().sum::<u64>() == value) {
-                rotate(&mut self.preamble, value);
-                continue;
+fn find_run(all: &[u64], target_sum: u64) -> Option<&[u64]> {
+    for slice_start in 0..all.len() {
+        let inner_slice = &all[slice_start..];
+        let mut sum = 0;
+        for (count, value) in inner_slice.iter().enumerate() {
+            sum += value;
+            if sum == target_sum {
+                return Some(&inner_slice[..(count+1)]);
+            } else if sum > target_sum {
+                break;
             }
-            rotate(&mut self.preamble, value);
-            return Some(value);
         }
     }
+    None
 }
 
 fn main() {
     let contents = fs::read_to_string("input.txt").unwrap();
     let numbers = numbers_from_contents(&contents);
-    let mut nf = NumberFinder::start(25, numbers.into_iter());
-    println!("{}", nf.next().unwrap());
+    let result = find_number(25, &mut numbers.clone().into_iter()).unwrap();
+    println!("Found: {}", result);
+
+    let run = find_run(&numbers, result).unwrap();
+    println!("Run: {:?}", run);
+    println!("Sum: {}", run.iter().min().unwrap() +
+                        run.iter().max().unwrap());
 }
 
 #[test]
@@ -78,6 +79,7 @@ fn test_sample() {
     576"#;
 
     let numbers = numbers_from_contents(SAMPLE_DATA);
-    let nf = NumberFinder::start(5, numbers.into_iter());
-    assert_eq!(vec![127], nf.collect::<Vec<_>>());
+    let result = find_number(5, &mut numbers.clone().into_iter()).unwrap();
+    assert_eq!(127, result);
+    assert_eq!(vec![15, 25, 47, 40], find_run(&numbers, result).unwrap());
 }
