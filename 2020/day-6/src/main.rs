@@ -34,7 +34,7 @@ impl Group {
 
 type Groups = Vec<Group>;
 
-fn groups_from_str(contents: &String) -> Groups {
+fn groups_from_str(contents: &str) -> Groups {
     let mut lines = contents.lines();
     let mut groups = Vec::new();
     loop {
@@ -80,7 +80,7 @@ a
 b
 "#;
 
-    let groups = groups_from_str(&SAMPLE_INPUT.to_string());
+    let groups = groups_from_str(&SAMPLE_INPUT);
     assert_eq!(group_union_lens(&groups), vec![3, 3, 3, 1, 1]);
     assert_eq!(group_intersection_lens(&groups), vec![3, 0, 1, 1, 1]);
 }

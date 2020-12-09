@@ -48,7 +48,7 @@ impl Passport {
         return true;
     }
 
-    fn check_year(yr: &String, min: u32, max: u32) -> bool {
+    fn check_year(yr: &str, min: u32, max: u32) -> bool {
         if !RE_YR.is_match(&yr) {
             return false;
         }

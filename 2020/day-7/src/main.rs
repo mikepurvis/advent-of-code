@@ -63,18 +63,18 @@ fn invert_rule_map(rule_map: &BagRuleMap) -> HashMap<String, HashSet<String>> {
     return map;
 }
 
-fn inverse_find(inverse_map: &HashMap<String, HashSet<String>>, needle: String) -> HashSet<String> {
+fn inverse_find(inverse_map: &HashMap<String, HashSet<String>>, needle: &str) -> HashSet<String> {
     let mut set = HashSet::new();
-    if let Some(found) = inverse_map.get(&needle) {
+    if let Some(found) = inverse_map.get(needle) {
         for bag in found.iter() {
             set.insert(bag.to_string());
-            set.extend(inverse_find(inverse_map, bag.to_string()));
+            set.extend(inverse_find(inverse_map, bag));
         }
     }
     return set;
 }
 
-fn forward_count(map: &BagRuleMap, name: &String, count: usize) -> usize {
+fn forward_count(map: &BagRuleMap, name: &str, count: usize) -> usize {
     let mut sum = 0;
     if let Some(contents) = map.get(name) {
         for (quantity, contents_name) in contents.iter() {
@@ -89,9 +89,9 @@ fn main() {
 	let contents = fs::read_to_string("input.txt").unwrap();
     let rule_map = bag_rule_map_from_contents(&contents);
     let inverse = invert_rule_map(&rule_map);
-    let found = inverse_find(&inverse, "shiny gold".to_string());
+    let found = inverse_find(&inverse, "shiny gold");
     println!("Found bags: {}", found.len());
-    println!("Inner count: {}", forward_count(&rule_map, &"shiny gold".to_string(), 1));
+    println!("Inner count: {}", forward_count(&rule_map, "shiny gold", 1));
 }
 
 
@@ -109,9 +109,9 @@ dotted black bags contain no other bags.
 "#;
     let rule_map = bag_rule_map_from_contents(&SAMPLE_INPUT);
     let inverse = invert_rule_map(&rule_map);
-    let found = inverse_find(&inverse, "shiny gold".to_string());
+    let found = inverse_find(&inverse, "shiny gold");
     assert_eq!(4, found.len());
-    assert_eq!(32, forward_count(&rule_map, &"shiny gold".to_string(), 1));
+    assert_eq!(32, forward_count(&rule_map, "shiny gold", 1));
 }
 
 #[test]
@@ -125,5 +125,5 @@ dark blue bags contain 2 dark violet bags.
 dark violet bags contain no other bags.
 "#;
     let rule_map = bag_rule_map_from_contents(&SAMPLE_INPUT);
-    assert_eq!(126, forward_count(&rule_map, &"shiny gold".to_string(), 1));
+    assert_eq!(126, forward_count(&rule_map, "shiny gold", 1));
 }
