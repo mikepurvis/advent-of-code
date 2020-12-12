@@ -14,4 +14,5 @@ to learn idiomatic Rust, but also to understand specific language and ecosystem 
 - Day 8: Enums, BitVec, String vs str, impl Iterator, explicit lifetime annotations.
 - Day 9: Slices, VecDeque.
 - Day 10: DefaultHashMap, itertools::zip, more about slices.
-- Day 11: ndarray.
+- Day 11: ndarray crate.
+- Day 12: euclid crate.
