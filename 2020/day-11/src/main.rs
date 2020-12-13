@@ -1,4 +1,3 @@
-
 extern crate ndarray;
 use ndarray::{Array2, s, concatenate, Axis, Zip};
 
@@ -8,27 +7,22 @@ use itertools::concat;
 use std::fs;
 
 
-fn array_from_contents(contents: &str) -> Array2<u16> {
+fn array_from_contents(contents: &str, ch: u8) -> Array2<u16> {
     let width = contents.lines().next().unwrap().trim().as_bytes().len();
     let rows = contents.lines()
         .map(|line| line.trim().bytes()
-             .map(|byte| match byte {
-                  b'.' => 0,
-                  b'L' => 1,
-                  _ => unreachable!()
-             }).collect::<Vec<_>>());
+             .map(|byte| if byte == ch { 1 } else { 0 })
+             .collect::<Vec<_>>());
     let data = concat(rows);
-    Array2::from_shape_vec((width, data.len() / width), data).unwrap()
+    Array2::from_shape_vec((data.len() / width, width), data).unwrap()
 }
 
 fn surrounds_array(input: &Array2<u16>) -> Array2<u16> {
-    let (xd, yd) = input.dim();
-
-    let shift_down = |input: &Array2<u16>| concatenate!(Axis(0), Array2::zeros((1, yd)), input.slice(s![..-1, ..]));
-    let shift_up = |input: &Array2<u16>| concatenate!(Axis(0), input.slice(s![1.., ..]), Array2::zeros((1, yd)));
-    let shift_right = |input: &Array2<u16>| concatenate!(Axis(1), Array2::zeros((xd, 1)), input.slice(s![.., ..-1]));
-    let shift_left = |input: &Array2<u16>| concatenate!(Axis(1), input.slice(s![.., 1..]), Array2::zeros((xd, 1)));
-
+    let (yd, xd) = input.dim();
+    let shift_up = |input: &Array2<u16>| concatenate!(Axis(0), Array2::zeros((1, xd)), input.slice(s![..-1, ..]));
+    let shift_down = |input: &Array2<u16>| concatenate!(Axis(0), input.slice(s![1.., ..]), Array2::zeros((1, xd)));
+    let shift_right = |input: &Array2<u16>| concatenate!(Axis(1), Array2::zeros((yd, 1)), input.slice(s![.., ..-1]));
+    let shift_left = |input: &Array2<u16>| concatenate!(Axis(1), input.slice(s![.., 1..]), Array2::zeros((yd, 1)));
     let shifted_down = shift_down(input);
     let shifted_up = shift_up(input);
     &shifted_down + &shifted_up + shift_left(input) + shift_right(input) +
@@ -55,7 +49,7 @@ fn step_until_stable(seats: &Array2<u16>) -> Array2<u16> {
     let mut occupied = seats.clone();
     loop {
         let new_occupied = next_step(&seats, &occupied);
-        println!("{:?}", new_occupied);
+        //println!("{:?}", new_occupied);
         if occupied == new_occupied {
             return occupied;
         }
@@ -65,7 +59,7 @@ fn step_until_stable(seats: &Array2<u16>) -> Array2<u16> {
 
 fn main() {
     let contents = fs::read_to_string("input.txt").unwrap();
-    let seats = array_from_contents(&contents);
+    let seats = array_from_contents(&contents, b'L');
     let occupied = step_until_stable(&seats);
     println!("Occupied seats: {}", occupied.sum());
 }
@@ -73,7 +67,7 @@ fn main() {
 
 #[test]
 fn test_sample() {
-    const SAMPLE: &str = "\
+    const SEATS: &str = "\
     L.LL.LL.LL
     LLLLLLL.LL
     L.L.L..L..
@@ -84,7 +78,83 @@ fn test_sample() {
     LLLLLLLLLL
     L.LLLLLL.L
     L.LLLLL.LL";
-    let seats = array_from_contents(SAMPLE);
-    let occupied = step_until_stable(&seats);
+    let seats = array_from_contents(SEATS, b'L');
+    let mut occupied = seats.clone();
+
+    const STEP2: &str = "\
+    #.LL.L#.##
+    #LLLLLL.L#
+    L.L.L..L..
+    #LLL.LL.L#
+    #.LL.LL.LL
+    #.LLLL#.##
+    ..L.L.....
+    #LLLLLLLL#
+    #.LLLLLL.L
+    #.#LLLL.##";
+    occupied = next_step(&seats, &occupied);
+    assert_eq!(occupied, array_from_contents(STEP2, b'#'));
+
+    const STEP3: &str = "\
+    #.##.L#.##
+    #L###LL.L#
+    L.#.#..#..
+    #L##.##.L#
+    #.##.LL.LL
+    #.###L#.##
+    ..#.#.....
+    #L######L#
+    #.LL###L.L
+    #.#L###.##";
+    occupied = next_step(&seats, &occupied);
+    assert_eq!(occupied, array_from_contents(STEP3, b'#'));
+
+    const STEP4: &str = "\
+    #.#L.L#.##
+    #LLL#LL.L#
+    L.L.L..#..
+    #LLL.##.L#
+    #.LL.LL.LL
+    #.LL#L#.##
+    ..L.L.....
+    #L#LLLL#L#
+    #.LLLLLL.L
+    #.#L#L#.##";
+    occupied = next_step(&seats, &occupied);
+    assert_eq!(occupied, array_from_contents(STEP4, b'#'));
+
+    const STEP5: &str = "\
+    #.#L.L#.##
+    #LLL#LL.L#
+    L.#.L..#..
+    #L##.##.L#
+    #.#L.LL.LL
+    #.#L#L#.##
+    ..L.L.....
+    #L#L##L#L#
+    #.LLLLLL.L
+    #.#L#L#.##";
+    occupied = next_step(&seats, &occupied);
+    assert_eq!(occupied, array_from_contents(STEP5, b'#'));
+
+    // Re-run it from the beginning to let the function
+    // determine the final state.
+    occupied = step_until_stable(&seats);
     assert_eq!(occupied.sum(), 37);
+}
+
+#[test]
+fn test_surrounds() {
+    const SEATS: &str = "\
+    LLLL
+    LL.L
+    LLLL";
+    let seats = array_from_contents(SEATS, b'L');
+    let surrounds = surrounds_array(&seats);
+
+    use ndarray::array;
+    assert_eq!(surrounds, array![
+        [3,4,4,2],
+        [5,7,8,4],
+        [3,4,4,2]]);
 }
