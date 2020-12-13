@@ -22,21 +22,25 @@ fn program_from_contents(contents: &str) -> Vec<Instr> {
     }).collect()
 }
 
+fn rotate_vector(input: &Vec2, degrees: i32) -> Vec2 {
+    let mut rotated = input.clone();
+    for _rotations in 0..(degrees / 90) {
+        rotated = Vec2::new(rotated.y, -rotated.x);
+    }
+    rotated
+}
+
 fn run_program1(program: &[Instr]) -> Vec2 {
     let mut ship_pose = Vec2::new(0, 0);
-    let mut facing: i32 = 360 * 10;
+    let mut facing = Vec2::new(1, 0);
 
     for instr in program.iter() {
         match instr.action {
-            'L' => facing += instr.value,
-            'R' => facing -= instr.value,
+            'L' => facing = rotate_vector(&facing, instr.value),
+            'R' => facing = rotate_vector(&facing, 360 - instr.value),
             _ => {
-                let dir = if instr.action == 'F' {
-                    match facing % 360 {
-                        0 => 'E', 90 => 'N', 180 => 'W', 270 => 'S', _ => unreachable!()
-                    }
-                } else { instr.action };
-                ship_pose += match dir {
+                ship_pose += match instr.action {
+                    'F' => facing,
                     'E' => Vec2::new(1, 0),
                     'W' => Vec2::new(-1, 0),
                     'N' => Vec2::new(0, -1),
@@ -47,14 +51,6 @@ fn run_program1(program: &[Instr]) -> Vec2 {
         }
     }
     ship_pose
-}
-
-fn rotate_vector(input: &Vec2, degrees: i32) -> Vec2 {
-    let mut rotated = input.clone();
-    for _rotations in 0..(degrees / 90) {
-        rotated = Vec2::new(rotated.y, -rotated.x);
-    }
-    rotated
 }
 
 fn run_program2(program: &[Instr]) -> Vec2 {
