@@ -16,3 +16,4 @@ to learn idiomatic Rust, but also to understand specific language and ecosystem 
 - Day 10: DefaultHashMap, itertools::zip, more about slices.
 - Day 11: ndarray crate.
 - Day 12: euclid crate.
+- Day 13: Infinite iterators, more filtering and collecting.
