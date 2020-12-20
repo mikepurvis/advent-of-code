@@ -1,0 +1,13 @@
+WHITESPACE = _{ " " }
+
+rule_num = @{ ASCII_DIGIT+ }
+
+char = @{ASCII_ALPHA_LOWER}
+
+char_quoted = ${ "\"" ~ char ~ "\"" }
+
+seq = { rule_num ~ (rule_num)* }
+
+choice = { seq ~ ("|" ~ seq)* }
+
+rule = { SOI ~ rule_num ~ ":" ~ (char_quoted | choice) ~ EOI }
