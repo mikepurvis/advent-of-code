@@ -24,17 +24,19 @@ fn do_move(cups: &mut Vec<u32>) {
     let head: Vec<_> = cups.drain(..4).collect();
     let current = head[0];
 
-    let mut sorted: Vec<u32> = cups.iter().copied().collect();
-    sorted.push(current.clone());
-    sorted.sort();
-    let sorted_current_index = sorted.binary_search(&current).unwrap();
-    let dest = if sorted_current_index > 0 {
-        &sorted[sorted_current_index - 1]
-    } else {
-        sorted.last().unwrap()
-    };
+    let mut dest = current - 1;
+    loop {
+        if dest == 0 {
+            dest = cups.len() as u32 + 4;
+        }
+        if head[1..].iter().any(|&n| n == dest) {
+            dest -= 1;
+            continue;
+        }
+        break;
+    }
 
-    let dest_index = (cups.iter().position(|cup| cup == dest).unwrap() + 1) as usize;
+    let dest_index = (cups.iter().position(|&cup| cup == dest).unwrap() + 1) as usize;
     cups.splice(dest_index..dest_index, head[1..].iter().copied());
     cups.push(current);
 }
