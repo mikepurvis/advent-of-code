@@ -16,7 +16,7 @@ fn find_largest_group(input: &Vec<Vec<u32>>) -> u32 {
 fn find_largest_three(input: &Vec<Vec<u32>>) -> u32 {
   let mut sums = input.iter().map(|v| v.iter().sum()).collect::<Vec<u32>>();
   sums.sort();
-  sums.iter().rev().take(3).iter().sum()
+  sums.iter().rev().take(3).into_iter().sum()
 }
 
 fn main() {
@@ -28,24 +28,23 @@ fn main() {
 
 #[test]
 fn test_sample() {
-	const SAMPLE: &str = "\
-1000
-2000
-3000
+  const SAMPLE: &str = "\
+    1000
+    2000
+    3000
 
-4000
+    4000
 
-5000
-6000
+    5000
+    6000
 
-7000
-8000
-9000
+    7000
+    8000
+    9000
 
-10000
-";
+    10000";
 
-    let input = process_input(&SAMPLE);
-    assert_eq!(find_largest_group(&input), 24000);
-    assert_eq!(find_largest_three(&input), 45000);
+  let input = process_input(&SAMPLE);
+  assert_eq!(find_largest_group(&input), 24000);
+  assert_eq!(find_largest_three(&input), 45000);
 }
