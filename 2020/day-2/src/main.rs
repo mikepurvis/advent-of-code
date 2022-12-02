@@ -15,19 +15,16 @@ struct Input {
 
 impl Input {
     fn get_from_file(filename: &str) -> Result<Vec<Input>, std::io::Error> {
-        let mut inputs: Vec<Input> = Vec::new();
         let contents = fs::read_to_string(filename).unwrap();
         let re = Regex::new("(?P<min>[0-9]+)-(?P<max>[0-9]+) (?P<letter>[a-z]): (?P<password>[a-z]*)").unwrap();
-        for caps in re.captures_iter(&contents) {
-            let input = Input {
+        Ok(re.captures_iter(&contents).map(|caps|
+            Input {
                 password: caps.name("password").unwrap().as_str().to_string(),
                 letter: caps.name("letter").unwrap().as_str().chars().next().unwrap(),
-                min: caps.name("min").unwrap().as_str().parse::<usize>().unwrap(),
-                max: caps.name("max").unwrap().as_str().parse::<usize>().unwrap()
-            };
-            inputs.push(input);
-        }
-        Ok(inputs)
+                min: caps.name("min").parse().unwrap(),
+                max: caps.name("max").parse().unwrap()
+            }
+        ).collect())
     }
 }
 

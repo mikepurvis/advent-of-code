@@ -1,11 +1,12 @@
 
 #[macro_use]
 extern crate lazy_static;
-
 extern crate regex;
+extern crate itertools;
 
-
+use itertools::zip;
 use regex::Regex;
+use std::collections::HashSet;
 use std::fs;
 use std::ops::RangeInclusive;
 
@@ -93,11 +94,35 @@ fn find_valid_tickets<'a>(tickets: &'a[Ticket], rules: &[Rule]) -> Vec<&'a Ticke
     }).collect()
 }
 
+fn determine_fields<'a>(valid_tickets: &[Ticket], rules: &'a[Rule]) -> Vec<&'a str> {
+    // Precook a vector of hashsets for potentially-applicable rules for each field,
+    // initially all rules.
+    let field_rules = (0..valid_tickets[0].len()).map(|_x| {
+        rules.iter().map(|r| r.name).collect::<HashSet<_>>()
+    }).collect::<Vec<_>>();
+
+    for ticket in valid_tickets.iter() {
+        for (rules_set, num) in zip(field_rules.iter_mut(), ticket.iter()) {
+            for rule in rules {
+                if !rule.check(*num) {
+                    rules_set.remove(&rule.name);
+                }
+            }
+        }
+    }
+    
+    Vec::new()
+}
+
 fn main() {
     let input = fs::read_to_string("input.txt").unwrap();
     let (rules, my_ticket, tickets) = parse_input(&input);
     let invalid = find_invalid_numbers(tickets.iter().flatten(), &rules);
     println!("Sum of invalid numbers: {}", invalid.iter().sum::<u16>());
+
+    let valid_tickets = find_valid_tickets(&tickets, &rules);
+    let fields = determine_fields(&valid_tickets, &rules);
+    println!("{:?}", fields);
 }
 
 #[test]
@@ -131,5 +156,4 @@ fn test_sample() {
 
     let valid_tickets = find_valid_tickets(&tickets, &rules);
     assert_eq!(valid_tickets.len(), 1);
-
 }
