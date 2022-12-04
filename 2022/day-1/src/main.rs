@@ -4,7 +4,7 @@ use std::fs;
 fn process_input(input_str: &str) -> Vec<Vec<u32>> {
   input_str.split("\n\n").map(|group_str|
     group_str.lines().map(|s|
-      s.trim().parse::<_>().unwrap()
+      s.trim().parse().unwrap()
     ).collect()
   ).collect()
 }
